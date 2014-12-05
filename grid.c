@@ -36,15 +36,18 @@ int readFileIntoGrid(Grid* grid, char* filename)
     FILE* f;
     if ((f = fopen(filename, "r")) == NULL)
         return 0;
-
-    grid->ncols = 332; // TODO shouldn't be hard coded
-    grid->nrows = 300;
+    fgetc(f);   // Skip over "ncols" label
+    grid->ncols = fgetc(f);
+    fgetc(f);   // Skip over "nrows" label
+    grid->nrows = fgetc(f);
     if (!allocateGrid(grid, grid->nrows, grid->ncols))
         return 0;
 
     for (i = 0; i < grid.nrows; i++) {
         for (j = 0; j < grid.ncols; j++) {
-            grid->values[i][j] = fgetc(f);
+            grid->color[i][j].red = fgetc(f);
+            grid->color[i][j].green = fgetc(f);
+            grid->color[i][j].blue = fgetc(f);
         }
     }
 
