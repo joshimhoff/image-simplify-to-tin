@@ -1,7 +1,14 @@
+// Color type designed to store RGB values
+typedef struct _color {
+    int red;
+    int green;
+    int blue;
+} Color;
+
 // Grid type designed to store in memory what the fields in a .asc file
 typedef struct _grid {
     int ncols, nrows, xllcorner, yllcorner, cellsize, NODATA_value;
-    int** values;
+    Color** color;
 } Grid;
 
 // Allocates a two dimensional array of ints to be used by the Grid struct
