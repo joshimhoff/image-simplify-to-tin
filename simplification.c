@@ -20,28 +20,40 @@ void initialTriangulation(TIN* tin, Grid* g)
     v1 = (Vertex *) malloc(sizeof(Vertex));
     v1->row = 0;
     v1->col = 0;
-    v1->value = get(g, v1->row, v1->col);
+    if (noDataAtPoint(g, v1->row, v1->col))
+        v1->value = 0;
+    else
+        v1->value = get(g, v1->row, v1->col);
 
     // Top right vertex
     Vertex* v2 = (Vertex *) malloc(sizeof(Vertex)); assert(v2);
     v2 = (Vertex *) malloc(sizeof(Vertex));
     v2->row = 0;
     v2->col = g->cols - 1;
-    v2->value = get(g, v2->row, v2->col);
+    if (noDataAtPoint(g, v2->row, v2->col))
+        v2->value = 0;
+    else
+        v2->value = get(g, v2->row, v2->col);
 
     // Bottom left vertex
     Vertex* v3 = (Vertex *) malloc(sizeof(Vertex)); assert(v3);
     v3 = (Vertex *) malloc(sizeof(Vertex));
     v3->row = g->rows - 1;
     v3->col = 0;
-    v3->value = get(g, v3->row, v3->col);
+    if (noDataAtPoint(g, v3->row, v3->col))
+        v3->value = 0;
+    else
+        v3->value = get(g, v3->row, v3->col);
 
     // Bottom right vertex
     Vertex* v4 = (Vertex *) malloc(sizeof(Vertex)); assert(v4);
     v4 = (Vertex *) malloc(sizeof(Vertex));
     v4->row = g->rows - 1;
     v4->col = g->cols - 1;
-    v4->value = get(g, v4->row, v4->col);
+    if (noDataAtPoint(g, v4->row, v4->col))
+        v4->value = 0;
+    else
+        v4->value = get(g, v4->row, v4->col);
 
     // Bottom left triangle
     Triangle* bottomLeft = (Triangle *) malloc(sizeof(Triangle));
@@ -230,6 +242,11 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
                 (row == 0 && col == g->cols-1) ||
                 (row == g->rows-1 && col == 0) ||
                 (row == g->rows-1 && col == g->cols-1))) {
+
+                // Skip no data points
+                if (noDataAtPoint(g, row, col)) {
+                    continue;
+                }
 
                 Vertex* v = (Vertex *) malloc(sizeof(Vertex));
                 assert(v);
