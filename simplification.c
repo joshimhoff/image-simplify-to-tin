@@ -12,31 +12,32 @@
 #include <math.h>
 #include <assert.h>
 
+// Two triangles covering the grid, one in bottom left, one in top right
 void initialTriangulation(TIN* tin, Grid* g)
 {
     // Top left vertex
-    Vertex* v1 = (Vertex *) malloc(sizeof(Vertex));
+    Vertex* v1 = (Vertex *) malloc(sizeof(Vertex)); assert(v1);
     v1 = (Vertex *) malloc(sizeof(Vertex));
     v1->row = 0;
     v1->col = 0;
     v1->color = get(g, v1->row, v1->col);
 
     // Top right vertex
-    Vertex* v2 = (Vertex *) malloc(sizeof(Vertex));
+    Vertex* v2 = (Vertex *) malloc(sizeof(Vertex)); assert(v2);
     v2 = (Vertex *) malloc(sizeof(Vertex));
     v2->row = 0;
     v2->col = g->cols - 1;
     v2->color = get(g, v2->row, v2->col);
 
     // Bottom left vertex
-    Vertex* v3 = (Vertex *) malloc(sizeof(Vertex));
+    Vertex* v3 = (Vertex *) malloc(sizeof(Vertex)); assert(v3);
     v3 = (Vertex *) malloc(sizeof(Vertex));
     v3->row = g->rows - 1;
     v3->col = 0;
     v3->color = get(g, v3->row, v3->col);
 
     // Bottom right vertex
-    Vertex* v4 = (Vertex *) malloc(sizeof(Vertex));
+    Vertex* v4 = (Vertex *) malloc(sizeof(Vertex)); assert(v4);
     v4 = (Vertex *) malloc(sizeof(Vertex));
     v4->row = g->rows - 1;
     v4->col = g->cols - 1;
@@ -44,12 +45,14 @@ void initialTriangulation(TIN* tin, Grid* g)
 
     // Bottom left triangle
     Triangle* bottomLeft = (Triangle *) malloc(sizeof(Triangle));
+    assert(bottomLeft);
     bottomLeft->v1 = v1;
     bottomLeft->v2 = v3;
     bottomLeft->v3 = v4;
 
     // Top right triangle
     Triangle* topRight = (Triangle *) malloc(sizeof(Triangle));
+    assert(topRight);
     topRight->v1 = v1;
     topRight->v2 = v2;
     topRight->v3 = v4;
@@ -62,7 +65,9 @@ void initialTriangulation(TIN* tin, Grid* g)
     tin->triangle = bottomLeft;
 }
 
-double linearlyInterpolate(Vertex* a, Vertex* b, Vertex* c, int row, int col, char color)
+// Three points in 3-space define a plane, call it f
+// Returns f(x=col, y=row)
+double linearlyInterpolate(Vertex* a, Vertex* b, Vertex* c, int row, int col, char color) 
 {
     double aValue, bValue, cValue;
     
@@ -102,6 +107,7 @@ double linearlyInterpolate(Vertex* a, Vertex* b, Vertex* c, int row, int col, ch
     return (-crossx*col - crossy*row - d) / crossz;
 }
 
+// Calculate difference between linearly interpolated value and actual value in grid
 double computeError(Grid* g, Triangle* t, Vertex* v)
 {
     Vertex* v1 = t->v1;
@@ -112,35 +118,40 @@ double computeError(Grid* g, Triangle* t, Vertex* v)
     double fromTinGreen = linearlyInterpolate(v1, v2, v3, v->row, v->col, 'g');
     double fromTinBlue = linearlyInterpolate(v1, v2, v3, v->row, v->col, 'b');
     
-    double error = fabs(fromTinRed - get(g, v->row, v->col).red) / 3.0 + fabs(fromTinGreen - get(g, v->row, v->col).green) / 3.0 + fabs(fromTinBlue - get(g, v->row, v->col).blue) / 3.0;
-
-    if (0 > error || 255 < error) {
-        printf("Bad error calculated for pixel: col, row: %d, %d\n", v->col, v->row);
-        assert(0);
-    }
+    double error = fabs(fromTinRed - get(g, v->row, v->col).red) / 3.0 + 
+                   fabs(fromTinGreen - get(g, v->row, v->col).green) / 3.0 + 
+                   fabs(fromTinBlue - get(g, v->row, v->col).blue) / 3.0;
     return error;
 }
 
+// Calculate area of triangle with vertices, v1, v2, v3
 float triangleArea(Vertex* v1, Vertex* v2, Vertex* v3)
 {
     return fabs(v1->col * (v2->row - v3->row) + v2->col * (v3->row - v1->row) +
                v3->col * (v1->row - v2->row)) / 2.0;
 }
 
-// TODO float equals
+// Determine if Vertex* v is contained by Triangle* t
 int triangleContains(Triangle* t, Vertex* v)
 {
-    /* float epsilon = 0.005; */
     float triArea = triangleArea(t->v1, t->v2, t->v3);
     float areaWithPoint = (triangleArea(t->v1, t->v2, v) +
                            triangleArea(t->v2, t->v3, v) +
                            triangleArea(t->v3, t->v1, v));
-    /* if (fabs(triArea - areaWithPoint) < triArea * epsilon) */
     if (triArea == areaWithPoint)
         return 1;
     return 0;
 }
 
+// Determine if Triangle* t has vertices v1 and v2
+int triangleHasTwoVertices(Triangle* t, Vertex* v1, Vertex* v2)
+{
+    return (t && ((v1 == t->v1 && v2 == t->v2) || (v1 == t->v1 && v2 == t->v3) ||
+            (v1 == t->v2 && v2 == t->v1) || (v1 == t->v2 && v2 == t->v3) ||
+            (v1 == t->v3 && v2 == t->v1) || (v1 == t->v3 && v2 == t->v2)));
+}
+
+// Connects triangle that borders Triangle* inside and Triangle* containing to inside
 void connectThirdNeighborToInsideTriangle(Triangle* containing, 
                                           Triangle* neighbor, 
                                           Triangle* inside)
@@ -153,13 +164,7 @@ void connectThirdNeighborToInsideTriangle(Triangle* containing,
         neighbor->t3 = inside;
 }
 
-int triangleHasTwoVertices(Triangle* t, Vertex* v1, Vertex* v2)
-{
-    return (t && ((v1 == t->v1 && v2 == t->v2) || (v1 == t->v1 && v2 == t->v3) ||
-            (v1 == t->v2 && v2 == t->v1) || (v1 == t->v2 && v2 == t->v3) ||
-            (v1 == t->v3 && v2 == t->v1) || (v1 == t->v3 && v2 == t->v2)));
-}
-
+// Connect Triangle* inside to the triangle that borders inside and Triangle* containing
 void connectTriangleToThirdNeighbor(Triangle* containing, Triangle* inside)
 {
     if (triangleHasTwoVertices(containing->t1, inside->v1, inside->v2)) {
@@ -174,17 +179,18 @@ void connectTriangleToThirdNeighbor(Triangle* containing, Triangle* inside)
         inside->t3 = containing->t3;
         connectThirdNeighborToInsideTriangle(containing, containing->t3, inside);
     }
-    else {
+    else { // inside is on edge of the grid, so has no third neighbor
         inside->t3 = NULL;
     }
 }
 
+// Splits Triangle* t into three triangles via Vertex* v
 void splitTriangle(TIN* tin, Triangle* t, Vertex* v)
 {
     // Allocate memory for new triangles
-    Triangle* t1 = (Triangle *) malloc(sizeof(Triangle));
-    Triangle* t2 = (Triangle *) malloc(sizeof(Triangle));
-    Triangle* t3 = (Triangle *) malloc(sizeof(Triangle));
+    Triangle* t1 = (Triangle *) malloc(sizeof(Triangle)); assert(t1);
+    Triangle* t2 = (Triangle *) malloc(sizeof(Triangle)); assert(t2);
+    Triangle* t3 = (Triangle *) malloc(sizeof(Triangle)); assert(t3);
 
     // Initialize visited flag to 0
     t1->visited = 0;
@@ -224,8 +230,7 @@ void splitTriangle(TIN* tin, Triangle* t, Vertex* v)
     tin->triangle = t1;
 }
 
-// TODO refactor and document
-// TODO assert mallocs
+// Simplify Grid* g until all points are within epsilon of the original grid, producing TIN* tin
 TIN* simplify(TIN* tin, Grid* g, double epsilon) 
 {
     // Initialize TIN with 4 corner points
@@ -236,9 +241,9 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
 
     // Priority queue for storing points and errors
     PriorityQueue* q = makeQueue();
+    assert(q);
     
     // Compute errors of all remaining grid points
-    // For each triangle, add point with max error into priority queue
     double maxErrorBottomLeft = -1;
     Vertex* vertexBottomLeft = 0;
     LList* vListBottomLeft = LList_init();
@@ -255,11 +260,14 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
                 (row == g->rows-1 && col == g->cols-1))) {
 
                 Vertex* v = (Vertex *) malloc(sizeof(Vertex));
+                assert(v);
                 v->row = row;
                 v->col = col;
                 v->color = get(g, row, col);
 
                 if (triangleContains(bottomLeft, v)) {
+                    // Each vertex stores the triangle that contains it
+                    // Each triangle contains a linked list of vertices inside it
                     v->triangle = bottomLeft;
                     LList_insert_at_head(vListBottomLeft, (void *)v);
 
@@ -285,24 +293,24 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
     bottomLeft->vList = vListBottomLeft;
     topRight->vList = vListTopRight;
 
+    // For each triangle, add point with max error into priority queue
     Node* nodeBottomLeft = makeNode(maxErrorBottomLeft, (void *)vertexBottomLeft);
+    assert(nodeBottomLeft);
     insert(q, nodeBottomLeft);
 
     Node* nodeTopRight = makeNode(maxErrorTopRight, (void *)vertexTopRight);
+    assert(nodeTopRight);
     insert(q, nodeTopRight);
     
     // Main algorithm
     Node* maxErrorNode = removeTop(q);
-
     while (maxErrorNode->priority > epsilon) {
         // Find point with largest error
         Vertex* maxErrorVertex = (Vertex *) maxErrorNode->item;
-        assert(maxErrorVertex);
         free(maxErrorNode);
 
         // Add largest error point to TIN
         Triangle* containsLargestErrorVertex = maxErrorVertex->triangle;
-        assert(containsLargestErrorVertex);
 
         // Retriangulate
         splitTriangle(tin, containsLargestErrorVertex, maxErrorVertex);
@@ -311,9 +319,8 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
         Triangle* newT2 = newT1->t1;
         Triangle* newT3 = newT1->t2;
 
-        // Compute errors of all points whose errors have changed
+        // Recompute errors of all points whose errors have changed
         LList* vertices = containsLargestErrorVertex->vList;
-        assert(containsLargestErrorVertex->vList);
         LNode* node = vertices->head; 
 
         double maxErrorT1 = -1;
@@ -332,6 +339,8 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
             Vertex* v = (Vertex *) node->item;
 
             if (triangleContains(newT1, v)) {
+                // Each vertex stores the triangle that contains it
+                // Each triangle contains a linked list of vertices inside it
                 v->triangle = newT1;
                 LList_insert_at_head(vListT1, (void *)v);
 
@@ -367,13 +376,17 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
         newT2->vList = vListT2;
         newT3->vList = vListT3;
 
+        // For each triangle, add point with max error into priority queue
         Node* nodeT1 = makeNode(maxErrorT1, (void *)vertexT1);
+        assert(nodeT1);
         insert(q, nodeT1);
 
         Node* nodeT2 = makeNode(maxErrorT2, (void *)vertexT2);
+        assert(nodeT2);
         insert(q, nodeT2);
 
         Node* nodeT3 = makeNode(maxErrorT3, (void *)vertexT3);
+        assert(nodeT3);
         insert(q, nodeT3);
 
         // After retriangulation, free old triangle
@@ -387,7 +400,7 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
     return tin;
 }
 
-// The main method
+// USAGE simplify [grid filename] [epsilon (double)]
 int main(int argc, char** argv)
 {
     if (argc != 3) {
@@ -395,48 +408,9 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    // Read grid into file
     Grid* g = (Grid *) malloc(sizeof(Grid));
     readFileIntoGrid(g, argv[1]);
-
-    /* printGrid(g); */
-
-    // Testing linearlyInterpolation
-    /* Vertex v1; */
-    /* Vertex v2; */
-    /* Vertex v3; */
-
-    /* v1.row = 5; */
-    /* v1.col = 5; */
-    /* v1.value = 0; */
-    /* v2.row = 5; */
-    /* v2.col = 25; */
-    /* v2.value = 20; */
-    /* v3.row = 25; */
-    /* v3.col = 5; */
-    /* v3.value = 20; */
-
-    /* double interpolation = linearlyInterpolate(&v1, &v2, &v3, 15, 15); */
-    /* printf("Testing linearlyInterpolation: %f\n", interpolation); */
-
-    // Testing triangleContains
-    /* v1.row = 5; */
-    /* v1.col = 5; */
-    /* v2.row = 5; */
-    /* v2.col = 25; */
-    /* v3.row = 25; */
-    /* v3.col = 5; */
-
-    /* Vertex v4; */
-    /* v4.row = 15; */
-    /* v4.col = 15; */
-
-    /* Triangle t; */
-    /* t.v1 = &v1; */
-    /* t.v2 = &v2; */
-    /* t.v3 = &v3; */
-
-    /* int contains = triangleContains(&t, &v4); */
-    /* printf("Testing triangleContains: %d\n", contains); */
 
     // Run grid-to-tin simplifier
     TIN* tin = (TIN *) malloc(sizeof(TIN));
