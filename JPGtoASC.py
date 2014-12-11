@@ -19,9 +19,6 @@ def main():
       pixelR = getRed(pixel)
       pixelG = getGreen(pixel)
       pixelB = getBlue(pixel)
-      # Commented out lines are for grayscale images
-      #pixelGray = int(pixelR * 0.299 + pixelG * 0.587 + pixelB * 0.114)
-      #dataFile.write(str(pixelGray) + " ")
       dataFile.write(str(pixelR) + " " + str(pixelG) + " " + str(pixelB) + " ")
     dataFile.write("\n")
 

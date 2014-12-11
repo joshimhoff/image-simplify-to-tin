@@ -71,6 +71,7 @@ double linearlyInterpolate(Vertex* a, Vertex* b, Vertex* c, int row, int col, ch
 {
     double aValue, bValue, cValue;
     
+    // Components are linearly interpolated seperately then averaged
     if (color == 'r') {
         aValue = a->color.red;
         bValue = b->color.red;
