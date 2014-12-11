@@ -401,11 +401,11 @@ TIN* simplify(TIN* tin, Grid* g, double epsilon)
     return tin;
 }
 
-// USAGE simplify [grid filename] [epsilon (double)]
+// USAGE simplify [.asc filename] [epsilon (double)]
 int main(int argc, char** argv)
 {
     if (argc != 3) {
-        printf("USAGE simplify [grid filename] [epsilon (double)]\n");
+        printf("USAGE simplify [.asc filename] [epsilon (double)]\n");
         return -1;
     }
 

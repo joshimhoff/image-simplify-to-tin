@@ -1,2 +1,20 @@
 Image-Simplify-To-Tin
 Josh Imhoff, Daniel Zeller, Michael Croteau
+
+Project is composed of six pieces:
+1. JPGtoASC.py -- converts a jpeg into a grid-like file
+    NOTE running JPGtoASC.py requires JES
+2. grid.h/c -- store rgb image as a grid
+3. pqueue.h/c -- an implementation of a generic priority queue
+4. llist.h/c -- an implementation of a generic linked list
+5. simplification.h/c  -- the grid-to-tin greedy insertion simplifier
+6. display.h/c -- the OpenGL tin painter for displaying results
+
+We have included a variety of images to be run as tests in the project directory.
+More can be created using JPGtoASC.py.
+
+Must have Glut installed.
+Build by running 'make.'
+Execute program by running 'simplify [.asc filename] [epsilon (double)].'
+
+Project is 1400 lines long.
