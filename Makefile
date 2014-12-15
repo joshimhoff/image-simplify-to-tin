@@ -1,6 +1,6 @@
 PLATFORM = $(shell uname)
 
-CFLAGS= -g -Wall -l m -std=c99
+CFLAGS= -g -Wall -std=c99
 LDFLAGS=
 
 ifeq ($(PLATFORM),Darwin)
@@ -11,8 +11,8 @@ LDFLAGS+= -m64 -lc -framework AGL -framework OpenGL -framework GLUT \
 else
 ## Linux
 INCLUDEPATH  = -I/usr/include/GL/
-LIBPATH = -L/usr/lib #-L/usr/X11R6/lib
-LDFLAGS+=  -lGL -lglut #-lrt -lGLU -lX11 -lm  -lXmu -lXext -lXi
+#LIBPATH = -L/usr/lib #-L/usr/X11R6/lib
+LDFLAGS+=  -lGL -lglut -lm #-lrt -lGLU -lX11 -lm  -lXmu -lXext -lXi
 endif
 
 CC = gcc
@@ -21,7 +21,7 @@ GRAPHICS = $(LIBPATH) $(LDFLAGS)
 default: compile
 
 compile: pqueue.o grid.o simplification.o display.o list.o
-	$(CC) $? -lm $(GRAPHICS) -o simplify
+	$(CC) $? $(GRAPHICS) -o simplify
 
 simp.o: simplification.c
 	$(CC) $(CFLAGS) -c $< -o $@
