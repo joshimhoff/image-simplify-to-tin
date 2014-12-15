@@ -61,6 +61,12 @@ void initialTriangulation(TIN* tin, Grid* g)
     bottomLeft->t3 = topRight;
     topRight->t3 = bottomLeft;
 
+    bottomLeft->t1 = NULL;
+    bottomLeft->t2 = NULL;
+
+    topRight->t1 = NULL;
+    topRight->t2 = NULL;
+
     // Initialize tin
     tin->triangle = bottomLeft;
 }
